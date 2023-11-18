@@ -25,10 +25,6 @@ namespace PicoSynth {
         // Joystick X
         adc_select_input(JSX_ADC);
         this->m_JoystickX = adc_read();
-
-        // Joystick Y
-        adc_select_input(JSY_ADC);
-        this->m_JoystickY = adc_read();
     
         // Frets
         this->m_FretState = 0;
@@ -54,20 +50,15 @@ namespace PicoSynth {
         return this->m_FretState & fret_mask;
     }
 
-    double GPIOHandle::GetJoystickXRaw() {
-        return this->m_JoystickX;
+    uint16_t GPIOHandle::GetJoystickXRaw() {
+        adc_select_input(JSX_ADC);
+        return adc_read();
     }
 
-    double GPIOHandle::GetJoystickYRaw() {
-        return this->m_JoystickY;
-    }
-
-    double GPIOHandle::GetJoystickXCentered() {
-        return this->GetJoystickXRaw() - (ADC_MAX / 2);
-    }
-
-    double GPIOHandle::GetJoystickYCentered() {
-        return this->GetJoystickYRaw() - (ADC_MAX / 2);
+    uint16_t GPIOHandle::GetJoystickYRaw() {
+        // Joystick Y
+        adc_select_input(JSY_ADC);
+        return adc_read();
     }
 
     void GPIOHandle::SetDebugLED(bool status) {

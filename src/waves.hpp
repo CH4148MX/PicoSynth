@@ -30,6 +30,7 @@ namespace PicoSynth {
             int m_Multiplier;
             uint64_t m_WaveTime;
             uint64_t m_WaveStart;
+            uint64_t m_MinimumRead;
             GPIOHandle *m_InputHandler;
     };
 };

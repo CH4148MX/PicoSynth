@@ -15,14 +15,12 @@ namespace PicoSynth {
             bool GetFretPressed(uint32_t fret_mask);
             int GetFretState();
             bool GetJoystickButtonPressed();
-            double GetJoystickXRaw();
-            double GetJoystickYRaw();
-            double GetJoystickXCentered();
-            double GetJoystickYCentered();
+            uint16_t GetJoystickXRaw();
+            uint16_t GetJoystickYRaw();
             void SetDebugLED(bool status);
         private:
-            double m_JoystickX = 0.0f;
-            double m_JoystickY = 0.0f;
+            uint16_t m_JoystickX = 0;
+            uint16_t m_JoystickY = 0;
             uint32_t m_FretState = 0;
             bool m_JoystickButton = false;
     };

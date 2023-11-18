@@ -9,7 +9,7 @@ namespace PicoSynth {
         this->m_WaveStart = time_us_64();
         this->m_Multiplier = 8;
         this->m_WaveType = SawWave;
-
+        this->m_MinimumRead = 0;
         // Setup GPIO.
         this->m_SliceIndex = pwm_gpio_to_slice_num(AUDIO_OUT);
         gpio_set_function(AUDIO_OUT, GPIO_FUNC_PWM);
@@ -17,10 +17,37 @@ namespace PicoSynth {
         pwm_set_enabled(this->m_SliceIndex, true);
     }
 
+/*
+double get_level(Wave *wv, double newhz) {
+    newhz *= wv->mult * wv->mod;
+    // effective_time stores
+    double effective_time = (newhz * (wv->time - wv->start) / 1000000);
+    effective_time -= (int) effective_time;
+    switch (wv->type) {
+        case SineWave: {
+            double c = cos(M_PI * effective_time);
+            return c * c;
+        }
+        case SquareWave:
+            return effective_time < 0.5f;
+        case SawWave:
+            return effective_time;
+        case TriangleWave:
+            return 2 * fabs(0.5f - effective_time);
+        default:
+            // error
+            SET_LED_ON();
+            break;
+    };
+    return 0;
+}
+*/
+
     // Returns a value between 0 and 1.0 that denotes the amp of the wave
     double Wave::CalculateLevel(double new_frequency, double modulation) {
         // effective_time stores
-        double c_EffectiveTime = (new_frequency * this->m_Multiplier * modulation * (this->m_WaveTime - this->m_WaveStart) / 1000000);
+        double c_NewFrequency = new_frequency * modulation * this->m_Multiplier;
+        double c_EffectiveTime = c_NewFrequency * (this->m_WaveTime - this->m_WaveStart) / 1000000;
         c_EffectiveTime -= (int) c_EffectiveTime;
         switch (this->m_WaveType) {
             case SineWave: {
@@ -45,9 +72,16 @@ namespace PicoSynth {
         }
         double level = 0;
         float modulation_factor = 1.0f;
+        this->m_WaveTime = time_us_64();
+        if (this->m_WaveTime - this->m_MinimumRead > 100000) {
+            uint16_t val = this->m_InputHandler->GetJoystickYRaw();
+            printf("%llu %hu %f\n", this->m_MinimumRead - this->m_WaveTime, val, exp2f((val - 2048.0f) / 2048.0f));
+            modulation_factor = exp2f((val - 2048.0f) / 2048.0f);
+            this->m_MinimumRead = this->m_WaveTime;
+        }   
         if (this->m_InputHandler->GetAnyFretPressed()) {
+            printf("%f\n", modulation_factor);
             this->m_InputHandler->SetDebugLED(true);
-            this->m_WaveTime = time_us_64();
             if (this->m_InputHandler->GetFretPressed(1 << 5))
                 level += CalculateLevel(FREQ_C, modulation_factor);
             if (this->m_InputHandler->GetFretPressed(1 << 3))
